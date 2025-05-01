@@ -1,0 +1,32 @@
+mongodb+srv://<db_username>:<db_password>@newwebcluster.k1wgrru.mongodb.net/?retryWrites=true&w=majority&appName=newwebcluster
+
+
+sip
+ecommerce product (start) Nextjs both
+
+
+
+
+
+1.profile details fills All updated
+2.sort newest
+3.exp level entry 
+4.price fixed
+5.no of props    less > 5 props
+6.us uk optional
+7.see interview
+8.create milstoness
+9.price low
+10.timeline
+11.add projects
+12.props Chatgpt
+
+
+
+
+create nemonic
+nemonic to private key
+metamask like extension
+address creation
+
+
