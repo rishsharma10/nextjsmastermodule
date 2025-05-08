@@ -1,98 +1,251 @@
-import React from 'react'
-import { toast } from 'react-toastify';
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 const location = () => {
+  type LatLng = { lat: number; lng: number };
 
+  /**
+   * Calculates the distance between two lat/lng points in kilometers.
+   */
+  function getDistance(a: LatLng, b: LatLng): number {
+    const R = 6371; // Radius of Earth in km
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
 
-    type LatLng = { lat: number; lng: number };
+    const aVal =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(aVal), Math.sqrt(1 - aVal));
+    return R * c;
+  }
 
-/**
- * Calculates the distance between two lat/lng points in kilometers.
- */
-function getDistance(a: LatLng, b: LatLng): number {
-  const R = 6371; // Radius of Earth in km
-  const dLat = toRad(b.lat - a.lat);
-  const dLng = toRad(b.lng - a.lng);
-  const lat1 = toRad(a.lat);
-  const lat2 = toRad(b.lat);
+  function toRad(deg: number): number {
+    return deg * (Math.PI / 180);
+  }
 
-  const aVal = Math.sin(dLat / 2) ** 2 +
-               Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(aVal), Math.sqrt(1 - aVal));
-  return R * c;
-}
+  /**
+   * Calculates bearing from one coordinate to another in degrees.
+   */
+  function calculateBearing(from: LatLng, to: LatLng): number {
+    const lat1 = toRad(from.lat);
+    const lat2 = toRad(to.lat);
+    const dLng = toRad(to.lng - from.lng);
 
-function toRad(deg: number): number {
-  return deg * (Math.PI / 180);
-}
+    const y = Math.sin(dLng) * Math.cos(lat2);
+    const x =
+      Math.cos(lat1) * Math.sin(lat2) -
+      Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+    const bearingRad = Math.atan2(y, x);
+    return (toDeg(bearingRad) + 360) % 360;
+  }
 
-/**
- * Calculates bearing from one coordinate to another in degrees.
- */
-function calculateBearing(from: LatLng, to: LatLng): number {
-  const lat1 = toRad(from.lat);
-  const lat2 = toRad(to.lat);
-  const dLng = toRad(to.lng - from.lng);
+  function toDeg(rad: number): number {
+    return rad * (180 / Math.PI);
+  }
 
-  const y = Math.sin(dLng) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) -
-            Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
-  const bearingRad = Math.atan2(y, x);
-  return (toDeg(bearingRad) + 360) % 360;
-}
+  /**
+   * Returns the absolute difference between two bearings (0–180 degrees)
+   */
+  function getAngleDifference(a: number, b: number): number {
+    const diff = Math.abs(a - b) % 360;
+    return diff > 180 ? 360 - diff : diff;
+  }
 
-function toDeg(rad: number): number {
-  return rad * (180 / Math.PI);
-}
+  /**
+   * Determines if user is ahead and possibly aligned with the driver's movement
+   */
+  function isUserMovingTowardAmbulance(
+    userPrev: LatLng,
+    userNow: LatLng,
+    driverPrev: LatLng,
+    driverNow: LatLng,
+    maxDistanceKm: number = 5,
+    maxDirectionDiff: number = 60 // optional: degrees
+  ): boolean {
+    debugger;
+    const distanceBefore = getDistance(userPrev, driverPrev);
+    const distanceAfter = getDistance(userNow, driverPrev);
 
-/**
- * Returns the absolute difference between two bearings (0–180 degrees)
- */
-function getAngleDifference(a: number, b: number): number {
-  const diff = Math.abs(a - b) % 360;
-  return diff > 180 ? 360 - diff : diff;
-}
+    const inRange = distanceAfter > distanceBefore;
 
-/**
- * Determines if user is ahead and possibly aligned with the driver's movement
- */
-function isUserMovingTowardAmbulance(
-  userPrev: LatLng,
-  userNow: LatLng,
-  driverPrev: LatLng,
-  driverNow: LatLng,
-  maxDistanceKm: number = 5,
-  maxDirectionDiff: number = 60 // optional: degrees
-): boolean {
-    debugger
-  const distanceBefore = getDistance(userPrev, driverPrev);
-  const distanceAfter = getDistance(userNow, driverPrev);
+    if (!inRange) return false;
 
-  const inRange = distanceAfter > distanceBefore 
+    const userBearing = calculateBearing(userPrev, userNow);
+    const driverBearing = calculateBearing(driverPrev, driverNow);
 
-  if (!inRange) return false;
+    const angleDiff = getAngleDifference(userBearing, driverBearing);
 
-  const userBearing = calculateBearing(userPrev, userNow);
-  const driverBearing = calculateBearing(driverPrev, driverNow);
+    return angleDiff <= maxDirectionDiff;
+  }
 
-  const angleDiff = getAngleDifference(userBearing, driverBearing);
+  const userPrev = { lat: 12.9611, lng: 77.6387 };
+  const userNow = { lat: 12.9625, lng: 77.6399 };
+  const driverPrev = { lat: 12.95, lng: 77.63 };
+  const driverNow = { lat: 12.953, lng: 77.633 };
 
-  return angleDiff <= maxDirectionDiff;
-}
+  const shouldNotify = isUserMovingTowardAmbulance(
+    userPrev,
+    userNow,
+    driverPrev,
+    driverPrev
+  );
 
-const userPrev = { lat: 12.9611, lng: 77.6387 };
-const userNow = { lat: 12.9625, lng: 77.6399 };
-const driverPrev = { lat: 12.9500, lng: 77.6300 };
-const driverNow = { lat: 12.9530, lng: 77.6330 };
+  console.log(shouldNotify ?? "alertttt");
 
-const shouldNotify = isUserMovingTowardAmbulance(userPrev, userNow, driverPrev, driverPrev);
+  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
 
-console.log(shouldNotify ?? "alertttt");
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            console.log("fetchedddddd lat long")
+            setLocation({
+              lat: position.coords.latitude,
+              lon: position.coords.longitude,
+            });
+          },
+          (error) => {
+            console.error('Geolocation error:', error);
+          }
+        );
+      } else {
+        console.warn('Geolocation not available');
+      }
+    }, 10000);
+    return () => clearInterval(interval)
+  }, []);
+  console.log(location,'locationoooo')
+  
 
+  const driverCoord: any = [30.715097, 76.691345];
+  const destCoord: any = [30.727796, 76.698537];
+  const userCoord: any = [{
+    lat:location?.lat ?? 0,
+    lon:location?.lon ?? 0
+  }];
+  // const userCoord: any = [
+  //   {
+  //     lat: 30.715482,
+  //     lon: 76.69196,
+  //     name: "on line 1",
+  //   },
+  //   {
+  //     lat: 30.715245,
+  //     lon: 76.691791,
+  //     name: "opp line 1",
+  //   },
+  //   {
+  //     lat: 30.715642,
+  //     lon: 76.692404,
+  //     name: "opp line 2",
+  //   },
+  //   {
+  //     lat: 30.715805,
+  //     lon: 76.692486,
+  //     name: "on line 2",
+  //   },
+  //   {
+  //     lat: 30.720711,
+  //     lon: 76.700377,
+  //     name: "on line 3",
+  //   },
+  //   {
+  //     lat: 30.720751,
+  //     lon: 76.700597,
+  //     name: "opp line 3",
+  //   },
+  //   {
+  //     lat: 30.721469,
+  //     lon: 76.701648,
+  //     name: "on line 4",
+  //   },
+  //   {
+  //     lat: 30.721405,
+  //     lon: 76.701678,
+  //     name: "opp line 4",
+  //   },
+  //   {
+  //     lat: 30.7252,
+  //     lon: 76.700582,
+  //     name: "on line balongi 1",
+  //   },
+  //   {
+  //     lat: 30.725329,
+  //     lon: 76.700603,
+  //     name: "opp line balongi 1",
+  //   },
+  //   {
+  //     lat: 30.72609,
+  //     lon: 76.69987,
+  //     name: "on line balongi 2",
+  //   },
+  //   {
+  //     lat: 30.726177,
+  //     lon: 76.699909,
+  //     name: "opp line balongi 2",
+  //   },
+  //   {
+  //     lat: 30.727035,
+  //     lon: 76.699149,
+  //     name: "single line balongi pull",
+  //   },
+  // ];
+  const initTurfApiCall = async () => {
+    const payload = {
+      from: {
+        lat: driverCoord[0],
+        lon: driverCoord[1],
+      },
+      to: {
+        lat: destCoord[0],
+        lon: destCoord[1],
+      },
+      users: userCoord,
+    } as any;
+    try {
+      const apiRes = await fetch("/api/bearing", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload), // ✅ stringified payload
+      });
+
+      const data = await apiRes.json(); // ✅ parse response
+      const resp = data?.users[0]
+      console.log("API response:", data);
+      // toast.success(JSON.stringify(data))
+      if(resp?.shouldAlert){
+        toast.success(`🚨 ALERT: User is inside corridor, bearing: ${resp?.bearing}, distanceInMeters:${resp?.distanceInMeters} , isInsideCorridor: ${resp?.isInsideCorridor}`);
+      }else{
+        toast.warning(`Error not in range, bearing: ${resp?.bearing}, distanceInMeters:${resp?.distanceInMeters} , isInsideCorridor: ${resp?.isInsideCorridor}`);
+      }
+    } catch (error) {}
+  };
+
+  useEffect(() => {
+    initTurfApiCall()
+  },[location?.lat])
+  // function outer() {
+  //   let count = 0;
+  //   return function inner() {
+  //     count++;
+  //     return count;
+  //   };
+  // }
+
+  // let inc = outer();
+  // console.log(inc(), "incccccc");
 
   return (
-    <div>location</div>
-  )
-}
+    <>
+      <div>fetch location</div>
+      {/* <button onClick={() => initTurfApiCall()}>initTurfApiCall</button> */}
+    </>
+  );
+};
 
-export default location
+export default location;

@@ -1,6 +1,9 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { ProductDetail } from "../interface/Product";
-export const API_BASE_URL = 'http://localhost:3000/'
+
+const STAGING_API_BASE_URL = "http://localhost:3000/";
+const LIVE_API_BASE_URL = "https://nextjsmastermoduleprototype.vercel.app/";
+export const API_BASE_URL = STAGING_API_BASE_URL;
 
 export interface Product extends ProductDetail {
   id: number;
