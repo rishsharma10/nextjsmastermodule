@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ];
 
 
-    const response = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf62488e121da212ae43438cac858e09c837ac&start=${from.lon},${from.lat}&end=${to.lon},${to.lat}`);
+    const response = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${process.env.NEXT_PUBLIC_API_KEY_ROAD}&start=${from.lon},${from.lat}&end=${to.lon},${to.lat}`);
     const data = await response.json();
     console.log(data,'datttaa');
     
