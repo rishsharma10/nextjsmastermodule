@@ -10,6 +10,8 @@ export default function LocationTracker() {
   // 1️⃣ Polling user's location every 10 seconds
   // 1️⃣ Polling user's location every 10 seconds
   // 1️⃣ Polling user's location every 10 seconds
+  // 1️⃣ Polling user's location every 10 seconds
+  // 1️⃣ Polling user's location every 10 seconds
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('geolocation' in navigator)) {
