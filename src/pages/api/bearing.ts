@@ -47,6 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log(data,'datttaa');
     
     const coordinates = data?.features[0]?.geometry?.coordinates;
+    console.log(coordinates, 'coordinates___________'); 
 
 
 
@@ -67,6 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Create buffer zone
     const buffer: any = turf.buffer(line, COORIDOOR_SECONDARY, { units: 'meters' });
+    console.log(buffer,'buffer_____')
 
     const results = users.map((user: any) => {
       if (!user.lat || !user.lon) return null;
@@ -96,7 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }).filter(Boolean);
 
     return res.status(200).json({
-    //   roadInfo: dataRoad,
+      // roadInfo: dataRoad,
       users: results,
     });
   } catch (error) {
