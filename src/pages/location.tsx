@@ -8,6 +8,8 @@ export default function LocationTracker() {
   const destCoord: [number, number] = [30.721510, 76.701702];
 
   // 1️⃣ Polling user's location every 10 seconds
+  // 1️⃣ Polling user's location every 10 seconds
+  // 1️⃣ Polling user's location every 10 seconds
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('geolocation' in navigator)) {
