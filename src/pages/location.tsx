@@ -4,8 +4,8 @@ import { toast } from 'react-toastify';
 export default function LocationTracker() {
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
 
-  const driverCoord: [number, number] = [30.715097, 76.691345];
-  const destCoord: [number, number] = [30.727796, 76.698537];
+  const driverCoord: [number, number] = [30.715110, 76.691347];
+  const destCoord: [number, number] = [30.721510, 76.701702];
 
   // 1️⃣ Polling user's location every 10 seconds
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function LocationTracker() {
 
   // 2️⃣ Trigger turf API call on location change
   useEffect(() => {
-    if (!location) return;
+    // if (!location) return;
 
     const initTurfApiCall = async () => {
       const payload = {
@@ -48,8 +48,20 @@ export default function LocationTracker() {
         },
         users: [
           {
-            lat: location.lat,
-            lon: location.lon,
+            lat: 30.715253,
+            lon: 76.691599,
+          },
+          {
+            lat: 30.715542,
+            lon: 76.692057,
+          },
+          {
+            lat: 30.715479,
+            lon: 76.692137,
+          },
+          {
+            lat: 30.714861,
+            lon: 76.691216,
           },
         ],
       };
@@ -62,7 +74,7 @@ export default function LocationTracker() {
           },
           body: JSON.stringify(payload),
         });
-
+console.log(apiRes,'apiResapiRes')
         const data = await apiRes.json();
         const resp = data?.users?.[0];
 
@@ -78,7 +90,7 @@ export default function LocationTracker() {
     };
 
     initTurfApiCall();
-  }, [location]);
+  }, []);
 
   return (
     <div>
